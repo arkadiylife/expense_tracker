@@ -115,3 +115,42 @@ class ExpenseTrackerApp:
 
         for exp in self.expenses:
             self.tree.insert("", "end", values=(exp["amount"], exp["category"], exp["date"]))
+
+
+    def filter_expenses(self):
+        category = self.filter_category.get()
+        filtered = [exp for exp in self.expenses if exp["category"] == category]
+        
+        for i in self.tree.get_children():
+            self.tree.delete(i)
+        
+        for exp in filtered:
+            self.tree.insert("", "end", values=(exp["amount"], exp["category"], exp["date"]))
+
+    def sum_for_period(self):
+        start_date = self.start_date_entry.get()
+        end_date = self.end_date_entry.get()
+        
+        try:
+            start = datetime.strptime(start_date, "%Y-%m-%d")
+            end = datetime.strptime(end_date, "%Y-%m-%d")
+            
+            if start > end:
+                messagebox.showerror("Ошибка", "Дата начала не может быть позже даты окончания.")
+                return
+
+            total = sum(
+                exp["amount"] for exp in self.expenses 
+                if start <= datetime.strptime(exp["date"], "%Y-%m-%d") <= end
+            )
+            
+            messagebox.showinfo("Сумма за период", f"Итого: {total:.2f} руб.")
+        
+        except ValueError:
+            messagebox.showerror("Ошибка", "Введите даты в формате ГГГГ-ММ-ДД.")
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = ExpenseTrackerApp(root)
+    root.mainloop()

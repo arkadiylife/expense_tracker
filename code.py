@@ -74,3 +74,44 @@ class ExpenseTrackerApp:
 
     def get_unique_categories(self):
         return list({exp["category"] for exp in self.expenses})
+    def validate_input(self):
+        amount = self.amount_entry.get()
+        category = self.category_entry.get()
+        date = self.date_entry.get()
+
+        if not amount.replace(".", "", 1).isdigit() or float(amount) <= 0:
+            messagebox.showerror("Ошибка", "Сумма должна быть положительным числом.")
+            return False
+
+        if not category:
+            messagebox.showerror("Ошибка", "Введите категорию.")
+            return False
+
+        try:
+            datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            messagebox.showerror("Ошибка", "Дата должна быть в формате ГГГГ-ММ-ДД.")
+            return False
+
+        return True
+
+    def add_expense(self):
+        if not self.validate_input():
+            return
+
+        expense = {
+            "amount": float(self.amount_entry.get()),
+            "category": self.category_entry.get(),
+            "date": self.date_entry.get()
+        }
+
+        self.expenses.append(expense)
+        self.save_expenses()
+        self.update_table()
+
+    def update_table(self):
+        for i in self.tree.get_children():
+            self.tree.delete(i)
+
+        for exp in self.expenses:
+            self.tree.insert("", "end", values=(exp["amount"], exp["category"], exp["date"]))

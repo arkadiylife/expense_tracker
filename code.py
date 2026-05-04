@@ -1,1 +1,76 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+import json
+from datetime import datetime
 
+DATA_FILE = "expenses.json"
+
+class ExpenseTrackerApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Expense Tracker")
+        self.root.geometry("800x500")
+
+        # Загрузка данных
+        self.expenses = self.load_expenses()
+
+        # Создание виджетов
+        self.create_widgets()
+        self.update_table()
+
+    def create_widgets(self):
+        # Поля ввода
+        ttk.Label(self.root, text="Сумма:").grid(row=0, column=0, padx=10, pady=10)
+        self.amount_entry = ttk.Entry(self.root)
+        self.amount_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        ttk.Label(self.root, text="Категория:").grid(row=0, column=2, padx=10, pady=10)
+        self.category_entry = ttk.Entry(self.root)
+        self.category_entry.grid(row=0, column=3, padx=10, pady=10)
+
+        ttk.Label(self.root, text="Дата (ГГГГ-ММ-ДД):").grid(row=0, column=4, padx=10, pady=10)
+        self.date_entry = ttk.Entry(self.root)
+        self.date_entry.grid(row=0, column=5, padx=10, pady=10)
+
+        # Кнопка добавления
+        ttk.Button(self.root, text="Добавить расход", command=self.add_expense).grid(
+            row=0, column=6, padx=10, pady=10)
+
+        # Таблица расходов
+        self.tree = ttk.Treeview(self.root, columns=("amount", "category", "date"), show="headings")
+        self.tree.heading("amount", text="Сумма")
+        self.tree.heading("category", text="Категория")
+        self.tree.heading("date", text="Дата")
+        self.tree.grid(row=1, column=0, columnspan=7, padx=10, pady=10, sticky="nsew")
+
+        # Фильтры и выбор периода
+        ttk.Label(self.root, text="Фильтр по категории:").grid(row=2, column=0, padx=10, pady=5)
+        self.filter_category = ttk.Combobox(self.root, values=self.get_unique_categories())
+        self.filter_category.grid(row=2, column=1, padx=10, pady=5)
+        ttk.Button(self.root, text="Фильтровать", command=self.filter_expenses).grid(
+            row=2, column=2, padx=10, pady=5)
+
+        ttk.Label(self.root, text="Период с:").grid(row=2, column=3, padx=10, pady=5)
+        self.start_date_entry = ttk.Entry(self.root)
+        self.start_date_entry.grid(row=2, column=4, padx=10, pady=5)
+
+        ttk.Label(self.root, text="по:").grid(row=2, column=5, padx=10, pady=5)
+        self.end_date_entry = ttk.Entry(self.root)
+        self.end_date_entry.grid(row=2, column=6, padx=10, pady=5)
+
+        ttk.Button(self.root, text="Сумма за период", command=self.sum_for_period).grid(
+            row=2, column=7, padx=10, pady=5)
+
+    def load_expenses(self):
+        try:
+            with open(DATA_FILE, "r") as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return []
+
+    def save_expenses(self):
+        with open(DATA_FILE, "w") as f:
+            json.dump(self.expenses, f, indent=4)
+
+    def get_unique_categories(self):
+        return list({exp["category"] for exp in self.expenses})
